@@ -29,10 +29,64 @@ export let rawDeltaTime = TARGET_DELTA;
 export let isPaused = false;
 
 let lastTime = performance.now();
+let justResumed = false; // ← NOUVEAU: empêche les actions juste après reprise
 
 export function getDelta() { return deltaTime; }
-export function togglePause() { isPaused = !isPaused; }
-export function setPause(value) { isPaused = value; }
+
+// ==================== POPUP PAUSE ====================
+function createPausePopup() {
+    let popup = document.getElementById('pausePopup');
+    if (!popup) {
+        popup = document.createElement('div');
+        popup.id = 'pausePopup';
+        popup.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.7);
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+                color: white;
+                font-family: monospace;
+            ">
+                <h1 style="font-size: 48px; margin-bottom: 20px;">⏸️ PAUSE</h1>
+                <p style="font-size: 20px;">Cliquez ou appuyez sur P pour reprendre</p>
+            </div>
+        `;
+        // ← NOUVEAU: clic sur le popup pour reprendre (pas de Espace)
+        popup.addEventListener('click', togglePause);
+        document.body.appendChild(popup);
+    }
+    return popup;
+}
+
+function showPausePopup() {
+    const popup = createPausePopup();
+    popup.style.display = 'flex';
+}
+
+function hidePausePopup() {
+    const popup = document.getElementById('pausePopup');
+    if (popup) popup.style.display = 'none';
+}
+
+function togglePause() {
+    isPaused = !isPaused;
+    if (isPaused) {
+        showPausePopup();
+        console.log('⏸️ Pause');
+    } else {
+        hidePausePopup();
+        justResumed = true; // ← NOUVEAU: flag pour ignorer prochaine frame
+        console.log('▶️ Reprise');
+    }
+}
 
 // ==================== AUDIO ====================
 function setupAudioActivation() {
@@ -114,12 +168,40 @@ setTimeout(() => {
     monsterManager.tryAutoSpawn();
 }, 3000);
 
+// ==================== PAUSE SUR PERTE DE FOCUS ====================
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && !isPaused) {
+        togglePause();
+        console.log('⏸️ Pause (onglet caché)');
+    }
+});
+
+// Pause avec la touche P (PAS Espace!)
+window.addEventListener('keydown', e => {
+    if (e.code === 'KeyP') {
+        togglePause();
+    }
+});
+
 // ==================== BOUCLE DE JEU ====================
 function gameLoop(currentTime) {
     requestAnimationFrame(gameLoop);
     
     if (isPaused) {
         lastTime = currentTime;
+        return;
+    }
+    
+    // ← NOUVEAU: si on vient de reprendre, on attend une frame sans traiter les touches
+    if (justResumed) {
+        justResumed = false;
+        lastTime = currentTime;
+        // Réinitialiser les touches pour éviter le saut auto
+        import('./input.js').then(({ keys }) => {
+            keys['Space'] = false;
+            keys['KeyW'] = false;
+            keys['ArrowUp'] = false;
+        });
         return;
     }
     
@@ -178,41 +260,6 @@ function updateGameLogic() {
             }
         }
     }
-    
-    // ==================== PAUSE SUR PERTE DE FOCUS ====================
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            isPaused = true;
-            console.log('⏸️ Jeu en pause (perte de focus)');
-        } else {
-            // Optionnel: reprendre automatiquement ou attendre un clic
-            // isPaused = false; // Décommenter pour reprise auto
-            console.log('▶️ Focus retrouvé (espace pour reprendre)');
-        }
-    });
-
-    // Pause avec la touche P
-    window.addEventListener('keydown', e => {
-        if (e.code === 'KeyP') {
-            isPaused = !isPaused;
-            console.log(isPaused ? '⏸️ Pause' : '▶️ Reprise');
-        }
-        // Reprendre avec Espace ou Escape si en pause
-        if (isPaused && (e.code === 'Space' || e.code === 'Escape')) {
-            isPaused = false;
-            console.log('▶️ Reprise');
-        }
-    });
-
-    // Pause quand on clique en dehors du canvas
-    window.addEventListener('blur', () => {
-        isPaused = true;
-    });
-
-    // Optionnel: reprise auto quand on revient sur la fenêtre
-    window.addEventListener('focus', () => {
-        // isPaused = false; // Décommenter pour reprise auto immédiate
-    });
     
     // Physique des loots
     for (let i = groundLoot.length - 1; i >= 0; i--) {

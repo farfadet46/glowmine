@@ -70,10 +70,18 @@ export function updatePlayer(dt = 1) {
 }
 
 function updateVisualEffects(dt = 1) {
-    if (player.squashEffect > 0) player.squashEffect -= dt;
-    if (player.jumpSquash > 0) player.jumpSquash -= dt;
+    // ← CORRECTION: utiliser Math.max pour éviter les valeurs négatives
+    player.squashEffect = Math.max(0, player.squashEffect - dt);
+    player.jumpSquash = Math.max(0, player.jumpSquash - dt);
 
-    if (player.squashEffect <= 0 && player.jumpSquash === 0) {
+    // ← CORRECTION: vérifier <= 0 au lieu de === 0
+    if (player.squashEffect <= 0 && player.jumpSquash <= 0) {
+        player.targetScaleX = 1;
+        player.targetScaleY = 1;
+    }
+
+    // ← CORRECTION: réinitialiser si les deux sont à 0
+    if (player.squashEffect <= 0 && player.jumpSquash <= 0 && player.targetScaleX !== 1) {
         player.targetScaleX = 1;
         player.targetScaleY = 1;
     }
@@ -108,7 +116,6 @@ function collideY() {
 
     for (let x = l; x <= r; x++) {
         if (player.vy > 0 && getTile(x, b) !== 0) {
-            // ← CHANGEMENT : vitesse verticale > 5 (au lieu de 1.5)
             const wasFalling = !player.grounded && player.vy > 5;
             
             player.y = b * TILE - player.h;
@@ -125,7 +132,9 @@ function collideY() {
         }
     }
 
-    player.grounded = false;
+    if (player.grounded && player.vy > 0) {
+        player.grounded = false;
+    }
 }
 
 function onPlayerLanded() {
