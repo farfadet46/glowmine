@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Glowmine alpha2</title>
+<link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+<!-- Indicateur d'activation audio -->
+<div id="audioActivator" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+     background: rgba(0,0,0,0.8); z-index: 9999; display: flex; 
+     justify-content: center; align-items: center; color: #0ff; 
+     font-family: monospace; font-size: 24px; cursor: pointer;">
+    <div style="text-align: center; border: 2px solid #0ff; padding: 40px; border-radius: 10px;">
+        <div style="font-size: 48px; margin-bottom: 20px;">🔊</div>
+        <div>CLIQUEZ POUR ACTIVER L'AUDIO</div>
+        <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">Les navigateurs bloquent l'audio automatique</div>
+    </div>
+</div>
+
+<div id="craftTorche" title="Transformer 3💎 → 🔥">CRAFT</div>
+<div id="inventory"></div>
+
+<div id="playerPos"></div>
+
+<div id="volumeControl" style="position: absolute; top: 80px; left: 20px; z-index: 1000;">
+    <label style="color: #0ff;">Volume:</label>
+    <input type="range" id="volumeSlider" min="0" max="100" value="50" style="width: 100px; background: #333;">
+</div>
+<!--
+<div id="essence-slot" class="slot" style="margin-left: 20px; border-color: #f0f;">
+    <div class="key">ESSENCE</div>
+    <div id="essence-icon" class="icon" style="color: #f0f; text-shadow: 0 0 10px #f0f;">✨</div>
+    <div id="essence-count" class="count">0</div>
+</div>
+-->
+<canvas id="game"></canvas>
+<div id="hotbar"></div>
+
+<canvas id="debugMinimap" width="150" height="150"></canvas>
+
+<!-- NOUVELLE INTERFACE COFFRE -->
+<div id="chestUI" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:2000; font-family:monospace;">
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:flex; gap:30px; align-items:flex-start;">
+
+        <!-- COLONNE GAUCHE : INVENTAIRE JOUEUR -->
+        <div style="background:rgba(0,0,0,0.9); border:2px solid #0ff; border-radius:8px; padding:15px; width:240px;">
+            <div style="color:#0ff; font-size:14px; margin-bottom:10px; text-align:center;">🎒 Inventaire</div>
+            <div id="playerInventoryGrid" style="display:grid; grid-template-columns:repeat(4, 50px); gap:6px;"></div>
+        </div>
+
+        <!-- COLONNE DROITE : COFFRE -->
+        <div style="background:rgba(0,0,0,0.9); border:2px solid #0ff; border-radius:8px; padding:15px; width:440px;">
+            <div style="color:#0ff; font-size:14px; margin-bottom:10px; text-align:center;">📦 Coffre</div>
+            <div id="chestGrid" style="display:grid; grid-template-columns:repeat(8, 50px); gap:6px;"></div>
+            <button onclick="closeChestUI()" style="margin-top:12px; width:100%; padding:6px; background:#0ff; color:#000; border:none; border-radius:4px; font-family:monospace; cursor:pointer;">Fermer (C)</button>
+        </div>
+
+    </div>
+</div>
+<script type="module" src="modules/main.js"></script>
+</body>
+</html>
